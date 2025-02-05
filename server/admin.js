@@ -2,10 +2,12 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
+const { v4: uuidv4 } = require('uuid');
+const { exec } = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const ownersFilePath = path.join(__dirname, '../public/owners.json'); // Убедитесь, что файл находится в этой директории
+const ownersFilePath = path.join(__dirname, '../public/owners.json');
 
 app.use(cors());
 app.use(express.json());
@@ -21,7 +23,7 @@ app.get('/api/owners', (req, res) => {
 });
 
 app.post('/api/owners', (req, res) => {
-    const newOwner = req.body;
+    const newOwner = { id: uuidv4(), ...req.body };
 
     fs.readFile(ownersFilePath, 'utf8', (err, data) => {
         if (err) {
@@ -40,6 +42,24 @@ app.post('/api/owners', (req, res) => {
 
             res.status(201).json(newOwner);
         });
+    });
+});
+
+app.post('/api/parse', (req, res) => {
+    const { startId, endId } = req.body;
+    const command = `node ${path.join(__dirname, 'parser.js')} ${startId} ${endId}`;
+
+    exec(command, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Ошибка выполнения команды: ${error.message}`);
+            return res.status(500).json({ error: 'Ошибка выполнения команды' });
+        }
+        if (stderr) {
+            console.error(`Ошибка: ${stderr}`);
+            return res.status(500).json({ error: 'Ошибка выполнения команды' });
+        }
+        console.log(`Результат: ${stdout}`);
+        res.status(200).json({ message: 'Парсинг запущен' });
     });
 });
 
