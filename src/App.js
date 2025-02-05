@@ -1,31 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import Table from './components/Table';
-import Pagination from './components/Pagination';
-import './style.css';
+import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import styles from './App.module.css';
+
+const Table = React.lazy(() => import('./components/Table'));
+const AdminPage = React.lazy(() => import('./components/AdminPage'));
 
 const rowsPerPage = 20;
 
-const buttonStyle = {
-    padding: '10px 20px',
-    margin: '10px',
-    backgroundColor: '#4CAF50',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '16px'
-};
-
-const buttonDisabledStyle = {
-    ...buttonStyle,
-    backgroundColor: '#ccc',
-    cursor: 'not-allowed'
-};
-
 const App = () => {
     const [data, setData] = useState([]);
+    const [displayData, setDisplayData] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [error, setError] = useState(null);
+    const observer = useRef();
 
     useEffect(() => {
         fetch('/owners.json')
@@ -48,6 +35,7 @@ const App = () => {
 
                 const sortedData = Object.entries(ownersCount).sort((a, b) => b[1].count - a[1].count);
                 setData(sortedData);
+                setDisplayData(sortedData.slice(0, rowsPerPage));
             })
             .catch(error => {
                 console.error('Ошибка загрузки данных:', error);
@@ -55,21 +43,55 @@ const App = () => {
             });
     }, []);
 
-    const displayPage = (page) => {
-        setCurrentPage(page);
-    };
+    const loadMoreData = useCallback(() => {
+        const nextPage = currentPage + 1;
+        const start = (nextPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        if (start < data.length) {
+            setDisplayData(prevData => [...prevData, ...data.slice(start, end)]);
+            setCurrentPage(nextPage);
+        }
+    }, [currentPage, data]);
 
-    const start = (currentPage - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    const pageData = data.slice(start, end);
-    const pageCount = Math.ceil(data.length / rowsPerPage);
+    useEffect(() => {
+        const handleObserver = (entries) => {
+            const target = entries[0];
+            if (target.isIntersecting) {
+                loadMoreData();
+            }
+        };
+
+        observer.current = new IntersectionObserver(handleObserver);
+        const loadMoreElement = document.querySelector('#load-more');
+        if (loadMoreElement) {
+            observer.current.observe(loadMoreElement);
+        }
+
+        return () => {
+            const loadMoreElement = document.querySelector('#load-more');
+            if (observer.current && loadMoreElement) {
+                observer.current.unobserve(loadMoreElement);
+            }
+        };
+    }, [loadMoreData]);
 
     return (
-        <div className="container">
-            {error ? <div className="error">{error}</div> : <Table data={pageData} />}
-            <Pagination pageCount={pageCount} currentPage={currentPage} onPageChange={displayPage} />
-            <button style={buttonStyle} onClick={() => window.location.reload()}>Обновить данные</button>
-        </div>
+        <Router>
+            <div className={styles.container}>
+                <Suspense fallback={<div>Loading...</div>}>
+                    <Switch>
+                        <Route exact path="/">
+                            {error ? <div className={styles.error}>{error}</div> : <Table data={displayData} />}
+                            <div id="load-more" className={styles.loadMore}></div>
+                            <button className={styles.button} onClick={() => window.location.reload()}>Обновить данные</button>
+                        </Route>
+                        <Route path="/admin">
+                            <AdminPage />
+                        </Route>
+                    </Switch>
+                </Suspense>
+            </div>
+        </Router>
     );
 };
 

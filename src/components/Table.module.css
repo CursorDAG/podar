@@ -1,0 +1,46 @@
+.container {
+    width: 80%;
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.th, .td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.th {
+    background-color: #f4f4f4;
+    cursor: pointer;
+}
+
+.tr:hover {
+    background-color: #f1f1f1;
+}
+
+.ownerTd {
+    padding: 10px;
+    border: 1px solid #ddd;
+    min-width: 250px;
+}
+
+a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}

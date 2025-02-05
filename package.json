@@ -1,10 +1,13 @@
 {
-  "name": "gift-proekt",
+  "name": "giftbot",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "react-scripts start",
+    "start": "node server/admin.js",
+    "client": "react-scripts start",
+    "server": "nodemon server/admin.js",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -14,7 +17,14 @@
     "cheerio": "^1.0.0-rc.10",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-scripts": "^5.0.1"
+    "react-scripts": "^5.0.1",
+    "express": "^4.17.1",
+    "nodemon": "^2.0.7",
+    "react-router-dom": "^5.2.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "concurrently": "^6.0.0"
   },
   "author": "",
   "license": "ISC",

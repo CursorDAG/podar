@@ -1,1 +1,7 @@
 node_modules
+{
+  "scripts": {
+    "start": "node --openssl-legacy-provider your_start_script.js"
+  }
+}
+
